@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="utf-8">
@@ -8,186 +8,134 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; font-family: 'Pretendard', -apple-system, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif; }
+  html, body { height: 100%; font-family: 'Pretendard', -apple-system, 'Segoe UI', sans-serif; }
   body { display: flex; }
-  #sidebar {
-    width: 360px; height: 100vh; overflow-y: auto;
-    background: #fafafa; border-right: 1px solid #e5e5e5;
-    padding: 20px;
-  }
+  #sidebar { width: 360px; height: 100vh; overflow-y: auto; background: #fafafa; border-right: 1px solid #e5e5e5; padding: 20px; }
   #map { flex: 1; height: 100vh; }
   h1 { font-size: 18px; margin-bottom: 4px; color: #222; }
   .subtitle { font-size: 12px; color: #888; margin-bottom: 16px; }
   .day-filter { display: flex; gap: 6px; margin-bottom: 16px; }
-  .day-filter button {
-    flex: 1; padding: 8px 0; border: 1px solid #ddd; border-radius: 8px;
-    background: white; font-size: 13px; cursor: pointer; font-weight: 600;
-    transition: all 0.15s;
-  }
+  .day-filter button { flex: 1; padding: 8px 0; border: 1px solid #ddd; border-radius: 8px; background: white; font-size: 13px; cursor: pointer; font-weight: 600; transition: all 0.15s; }
   .day-filter button.active.d1 { background: #2563eb; color: white; border-color: #2563eb; }
   .day-filter button.active.d2 { background: #dc2626; color: white; border-color: #dc2626; }
   .day-filter button.active.d3 { background: #16a34a; color: white; border-color: #16a34a; }
   .day-filter button.active.dx { background: #6b7280; color: white; border-color: #6b7280; }
   .day-section { margin-bottom: 18px; }
-  .day-section h2 {
-    font-size: 14px; padding: 6px 10px; border-radius: 6px;
-    color: white; margin-bottom: 8px;
-  }
+  .day-section h2 { font-size: 14px; padding: 6px 10px; border-radius: 6px; color: white; margin-bottom: 8px; }
   .day-section.d1 h2 { background: #2563eb; }
   .day-section.d2 h2 { background: #dc2626; }
   .day-section.d3 h2 { background: #16a34a; }
   .day-section.dx h2 { background: #6b7280; }
-  .place-item {
-    background: white; border: 1px solid #eee; border-radius: 8px;
-    padding: 10px 12px; margin-bottom: 6px; cursor: pointer;
-    transition: all 0.1s;
-  }
+  .day-area { font-size: 10px; color: #666; margin-bottom: 8px; padding: 0 2px; letter-spacing: 0.3px; }
+  .place-meta { display: flex; gap: 6px; align-items: center; margin-top: 3px; flex-wrap: wrap; }
+  .place-area { font-size: 10px; color: #666; }
+  .place-rec { font-size: 10px; color: #fff; background: #6b7280; border-radius: 4px; padding: 1px 6px; }
+  .place-item { background: white; border: 1px solid #eee; border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; cursor: pointer; transition: all 0.1s; }
   .place-item:hover { background: #f3f4f6; border-color: #ccc; }
   .place-name { font-size: 13px; font-weight: 600; color: #222; }
   .place-time { font-size: 11px; color: #888; margin-top: 2px; }
   .place-desc { font-size: 11px; color: #555; margin-top: 4px; line-height: 1.4; }
-  .gmap-link {
-    display: inline-block; font-size: 11px; color: #2563eb;
-    text-decoration: none; margin-top: 4px;
-  }
+  .gmap-link { display: inline-block; font-size: 11px; color: #2563eb; text-decoration: none; margin-top: 4px; }
   .gmap-link:hover { text-decoration: underline; }
   .leaflet-popup-content { font-size: 13px; min-width: 200px; }
   .popup-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
   .popup-time { color: #888; font-size: 11px; margin-bottom: 6px; }
   .popup-desc { color: #444; font-size: 12px; line-height: 1.5; margin-bottom: 8px; }
-  .popup-link {
-    display: inline-block; padding: 5px 10px; background: #2563eb; color: white;
-    text-decoration: none; border-radius: 4px; font-size: 11px; font-weight: 600;
-  }
-  @media (max-width: 700px) {
-    body { flex-direction: column-reverse; }
-    #sidebar { width: 100%; height: 50vh; border-right: none; border-top: 1px solid #ddd; }
-    #map { height: 50vh; }
-  }
+  .popup-link { display: inline-block; padding: 5px 10px; background: #2563eb; color: white; text-decoration: none; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  @media (max-width: 700px) { body { flex-direction: column-reverse; } #sidebar { width: 100%; height: 50vh; border-right: none; border-top: 1px solid #ddd; } #map { height: 50vh; } }
 </style>
 </head>
 <body>
 <div id="sidebar">
   <h1>도쿄 2박 3일 여행 지도</h1>
   <div class="subtitle">2026.05.13(수) ~ 05.15(금) · APA 호텔 우에노 에키마에</div>
-
   <div class="day-filter">
     <button class="active d1" data-day="1">Day 1</button>
     <button class="active d2" data-day="2">Day 2</button>
     <button class="active d3" data-day="3">Day 3</button>
     <button class="active dx" data-day="x">추가</button>
   </div>
-
   <div id="place-list"></div>
 </div>
 <div id="map"></div>
-
 <script>
 const places = [
-  // ===== HOTEL =====
   { day: '1', name: '🏨 APA 호텔 우에노 에키마에', time: '체크인 15:00', lat: 35.7100, lng: 139.7780, desc: '숙소. 우에노역 도보 5분, 짐 보관 가능.', gmap: 'APA+Hotel+Ueno+Ekimae' },
-
-  // ===== DAY 1 =====
   { day: '1', name: '⛩ 스가 신사 (須賀神社)', time: '16:00', lat: 35.6859, lng: 139.7263, desc: '〈너의 이름은〉 마지막 재회 계단! 요쓰야산초메역 3번 출구 도보 6분.', gmap: 'Suga+Shrine+Yotsuya+Tokyo' },
   { day: '1', name: '🏢 NTT 도코모 요요기 빌딩', time: '17:15', lat: 35.6843, lng: 139.7008, desc: '〈너의 이름은〉 도쿄 시점샷 단골. 시계탑 모양 빌딩.', gmap: 'NTT+Docomo+Yoyogi+Building' },
   { day: '1', name: '🛍 신주쿠 이세탄 (데파치카)', time: '18:00', lat: 35.6917, lng: 139.7037, desc: 'B1 데파치카 디저트·도시락 천국. 고급 디저트 구경+포장 추천.', gmap: 'Isetan+Shinjuku' },
-  { day: '1', name: '🍜 후운지 (FUUNJI) 츠케멘', time: '19:15', lat: 35.6839, lng: 139.7000, desc: '⭐영상 V1 픽! 미슐랭 빕구르망 츠케멘 명소. 닭+멸치 더블 스프. 신주쿠 남쪽 출구 도보 5분. 11:00~21:00 (15:00~17:00 브레이크).', gmap: 'Fuunji+Shinjuku' },
-  { day: '1', name: '☕ 카페 알리야 (프렌치토스트)', time: '20:30', lat: 35.6920, lng: 139.7045, desc: '⭐영상 V1·V2 픽! 도쿄 No.1 프렌치토스트 ¥1,400. 신주쿠 3-1-17, 이세탄 옆 도보 3분.', gmap: 'Cafe+Aaliya+Shinjuku' },
-
-  // ===== DAY 2 - 확정 A코스 (시부야·요요기 풀코스) =====
+  { day: '1', name: '🍜 후운지 FUUNJI (츠케멘)', time: '19:15', lat: 35.6839, lng: 139.7000, desc: '⭐영상 V1 픽! 미슐랭 빕구르망 츠케멘 명소. 닭+멸치 더블 스프. 11:00~21:00 (브레이크 15~17시).', gmap: 'Fuunji+Shinjuku' },
+  { day: '1', name: '☕ 카페 알리야 (프렌치토스트)', time: '20:30', lat: 35.6920, lng: 139.7045, desc: '⭐영상 V1·V2 픽! 도쿄 No.1 프렌치토스트 ¥1,400. 이세탄 옆 도보 3분.', gmap: 'Cafe+Aaliya+Shinjuku' },
   { day: '2', name: '⛩ 메이지 신궁', time: '10:00', lat: 35.6764, lng: 139.6993, desc: '메이지진구마에역 1번 출구 도보 1분. 큰 도리이+자갈길 산책. 5월 카키츠바타 만개. 무료.', gmap: 'Meiji+Jingu+Shrine' },
   { day: '2', name: '🌳 요요기 공원', time: '10:50', lat: 35.6716, lng: 139.6948, desc: '도쿄 최대 도심공원. 분수광장+잔디밭 5월 신록. 무료.', gmap: 'Yoyogi+Park+Tokyo' },
-  { day: '2', name: '☕ 리틀 냅 커피 스탠드', time: '11:15', lat: 35.6760, lng: 139.6900, desc: '⭐영상 V1 픽! 요요기 공원 옆 라떼 명소 ¥500. 카멜백 도보 5분 거리. 산책+커피.', gmap: 'Little+Nap+Coffee+Stand+Yoyogi' },
-  { day: '2', name: '🥚 카멜백 (Camelback)', time: '11:50', lat: 35.6691, lng: 139.6900, desc: '⭐V1·V2 영상 모두 픽! 스시 셰프가 만드는 일본식 에그샌드 ¥600. 09:00~17:00, 수휴.', gmap: 'Camelback+Tomigaya+Tokyo' },
-  { day: '2', name: '🥩 네기시 시부야 파르코점 (우설점심)', time: '13:00', lat: 35.6620, lng: 139.6985, desc: '⭐우설구이 30년 노포! 시로타키+카타시오 세트 ¥1,800. 보리밥+테일스프 무한리필. 시부야 파르코 정문 맞은편.', gmap: 'Negishi+Shibuya+Parco' },
+  { day: '2', name: '☕ 리틀 냅 커피 스탠드', time: '11:15', lat: 35.6760, lng: 139.6900, desc: '⭐영상 V1 픽! 요요기 공원 옆 라떼 명소 ¥500.', gmap: 'Little+Nap+Coffee+Stand+Yoyogi' },
+  { day: '2', name: '🥚 카멜백 (에그샌드)', time: '11:50', lat: 35.6691, lng: 139.6900, desc: '⭐V1·V2 영상 모두 픽! 스시 셰프가 만드는 일본식 에그샌드 ¥600. 09:00~17:00, 수휴.', gmap: 'Camelback+Tomigaya+Tokyo' },
+  { day: '2', name: '🥩 네기시 시부야 파르코점 (우설구이)', time: '13:00', lat: 35.6620, lng: 139.6985, desc: '⭐우설구이 30년 노포! 시로타키+카타시오 세트 ¥1,800. 보리밥+테일스프 무한리필.', gmap: 'Negishi+Shibuya+Parco' },
   { day: '2', name: '🛍 시부야 파르코 6F', time: '14:10~16:30', lat: 35.6618, lng: 139.6985, desc: '⭐닌텐도 도쿄·포켓몬센터·점프샵·도토리공화국(지브리)·카프콤. 면세 가능.', gmap: 'Shibuya+Parco' },
-  { day: '2', name: '🌟 나타 데 크리스티아노', time: '16:40', lat: 35.6667, lng: 139.6886, desc: '도쿄 No.1 포르투갈 에그타르트 ¥350. 시부야 파르코에서 도보 7분(서쪽).', gmap: 'Nata+de+Cristiano+Shibuya' },
+  { day: '2', name: '🌟 나타 데 크리스티아노 (에그타르트)', time: '16:40', lat: 35.6667, lng: 139.6886, desc: '도쿄 No.1 포르투갈 에그타르트 ¥350. 시부야 파르코에서 도보 7분(서쪽).', gmap: 'Nata+de+Cristiano+Shibuya' },
   { day: '2', name: '☕ 미야시타 파크 + 스타벅스', time: '17:00', lat: 35.6629, lng: 139.7026, desc: '옥상 잔디공원 + 디자인 명소 스타벅스. 시부야 빌딩숲 사진 포인트.', gmap: 'Miyashita+Park+Shibuya' },
   { day: '2', name: '🌇 시부야 스카이', time: '17:30 일몰', lat: 35.6585, lng: 139.7019, desc: '⭐사전예약 필수⭐ 5/14 일몰 18:45. 옥상 헬리포트 인생샷+야경 90분. ¥3,100.', gmap: 'Shibuya+Sky' },
-  { day: '2', name: '🥩 야키니쿠 호루이치 시부야점 (저녁)', time: '19:30', lat: 35.6595, lng: 139.7050, desc: '⭐영상 V1 픽! 와규 하라미·시오 호르몬 야키니쿠. 시부야 3-6-18, 시부야 스카이 도보 7분. 우설 점심 + 야키니쿠 저녁 더블!', gmap: 'Yakiniku+Horuichi+Shibuya' },
-  { day: '2', name: '🥩 히키니쿠토 코메 (대안 햄버그)', time: '19:30 (대안)', lat: 35.6614, lng: 139.6995, desc: '⭐V2 영상 픽 대안. 다진 와규 햄버그+숯불+솥밥+미소시루 ¥2,200. 줄 60~90분.', gmap: 'Hikiniku+to+Kome+Shibuya' },
-  { day: 'x', name: '🥩 이마카츠 롯폰기점 (돈카츠)', time: 'Day 2 저녁 대안', lat: 35.6627, lng: 139.7322, desc: '⭐영상 V1 픽! 추성훈 맛집으로 유명한 흑돼지 돈카츠. 시부야→히비야선→롯폰기 10분.', gmap: 'Imakatsu+Roppongi' },
-  { day: 'x', name: '🍔 Maa-san\'s House (시부야 햄버그)', time: '시부야 저녁 대안', lat: 35.6585, lng: 139.6968, desc: '와규 토로토로 함박스테이크 전문. 시부야 도겐자카, 창섭의 첫 번째 맛집.', gmap: 'Maa+san+House+Shibuya+Dogenzaka' },
-  { day: 'x', name: '🍢 쿠시핫친 하마마쓰초 2', time: '동선 X', lat: 35.6582, lng: 139.7556, desc: '영상 V1 픽 야키토리·이자카야. 하마마쓰초 1초메. 김병진님 일정 동선과 거리 멀어 패스 권장.', gmap: 'Kushihacchin+Hamamatsucho' },
-  { day: 'x', name: '🛒 몽벨 도쿄 교바시점', time: '시간 부족', lat: 35.6779, lng: 139.7705, desc: '아웃도어 매장. 도쿄스퀘어가든 12F. 도쿄역 근처. Day 3 출국 시간 빠듯해서 패스.', gmap: 'Montbell+Tokyo+Kyobashi' },
-
-  // ===== DAY 3 =====
-  { day: '3', name: '⛩ 센소지 (浅草寺)', time: '07:30 새벽', lat: 35.7148, lng: 139.7967, desc: '★새벽 7시 전 가면 인파 0명!★ 빨간 등롱+푸른 하늘 인생샷.', gmap: 'Sensoji+Asakusa' },
+  { day: '2', name: '🥩 야키니쿠 호루이치 시부야점 (야키니쿠)', time: '19:30', lat: 35.6595, lng: 139.7050, desc: '⭐영상 V1 픽! 와규 하라미·시오 호르몬 야키니쿠. 시부야 스카이 도보 7분.', gmap: 'Yakiniku+Horuichi+Shibuya' },
+  { day: '2', name: '🥩 히키니쿠토 코메 (와규 햄버그)', time: '19:30 (대안)', lat: 35.6614, lng: 139.6995, desc: '⭐V2 영상 픽 대안. 다진 와규 햄버그+숯불+솥밥+미소시루 ¥2,200.', gmap: 'Hikiniku+to+Kome+Shibuya' },
+  { day: '3', name: '⛩ 센소지', time: '07:30 새벽', lat: 35.7148, lng: 139.7967, desc: '★새벽 7시 전 가면 인파 0명!★ 빨간 등롱+푸른 하늘 인생샷.', gmap: 'Sensoji+Asakusa' },
   { day: '3', name: '☕ 쿠라마에 카페 거리', time: '08:30', lat: 35.7058, lng: 139.7918, desc: 'Coffee Wrights, Pelican Cafe(80년 빵집), Cafe Otonova 추천.', gmap: 'Kuramae+Cafe+Tokyo' },
   { day: '3', name: '🌰 도토리공화국 (소라마치 본점)', time: '10:00', lat: 35.7104, lng: 139.8107, desc: '도쿄 최대 지브리 공식샵. 소라마치 한정 4종 있음!', gmap: 'Donguri+Republic+Solamachi' },
   { day: '3', name: '🗼 도쿄 스카이트리', time: '10:30', lat: 35.7100, lng: 139.8107, desc: '소라마치 쇼핑몰 같이 있음. 시간되면 전망대.', gmap: 'Tokyo+Skytree' },
-  { day: '3', name: '🍱 우나기노 나루세 (카렛타 시오도메)', time: '11:30 점심', lat: 35.6657, lng: 139.7610, desc: '⭐고PD 픽! 장어덮밥 ¥1,600부터. 가성비 우나기 끝판. 카렛타 시오도메 B1F. 호텔 → 긴자선 → 신바시 8분 → 도보 3분. 11:00~15:00 / 17:00~20:00.', gmap: 'Unagi+no+Naruse+Caretta+Shiodome' },
-
-  // ===== ADDITIONAL =====
-  { day: 'x', name: '🌌 롯폰기 힐즈 스카이덱', time: '여유시', lat: 35.6604, lng: 139.7292, desc: '〈날씨의 아이〉 옥상 신사 모티브. 야외 헬리포트 전망대.', gmap: 'Roppongi+Hills+Sky+Deck' },
-  { day: 'x', name: '🗽 오다이바 자유의 여신상', time: '여유시', lat: 35.6263, lng: 139.7748, desc: '〈날씨의 아이〉 야경 명소. 무지개 다리 뷰.', gmap: 'Odaiba+Statue+of+Liberty' },
-  { day: 'x', name: '🚉 도쿄역 마루노우치 광장', time: '여유시', lat: 35.6814, lng: 139.7660, desc: '〈스즈메의 문단속〉 등장. 도쿄역 캐릭터 스트리트(B1)도 있음!', gmap: 'Tokyo+Station+Marunouchi' },
-  { day: 'x', name: '🌉 오차노미즈 히지리바시', time: '여유시', lat: 35.6993, lng: 139.7672, desc: '〈스즈메의 문단속〉 차 타는 장면. 벽돌 고가선.', gmap: 'Hijiribashi+Ochanomizu' },
-  { day: 'x', name: '🛍 나카노 브로드웨이', time: '굿즈', lat: 35.7088, lng: 139.6660, desc: '만다라케 본점. 희귀 빈티지 애니 굿즈 천국.', gmap: 'Nakano+Broadway' },
-  { day: 'x', name: '🎭 이케부쿠로 애니메이트 본점', time: '굿즈', lat: 35.7290, lng: 139.7137, desc: '8층 통째 애니샵. 신간 굿즈는 여기.', gmap: 'Animate+Ikebukuro' },
-  { day: 'x', name: '🎨 시모키타자와', time: '편집샵', lat: 35.6614, lng: 139.6680, desc: '도쿄의 홍대. 빈티지·인디 편집샵 천국.', gmap: 'Shimokitazawa' },
-  { day: 'x', name: '📚 다이칸야마 츠타야 T-Site', time: '편집샵', lat: 35.6486, lng: 139.7012, desc: '책+카페+패션 한 곳에. 어른 데이트 분위기.', gmap: 'Daikanyama+Tsutaya' },
-  { day: 'x', name: '🍜 로쿠린샤 도쿄역점', time: '식사', lat: 35.6814, lng: 139.7676, desc: '츠케멘 명가. 도쿄역 라멘 스트리트(B1).', gmap: 'Rokurinsha+Tokyo+Station' },
+  { day: '3', name: '🍱 우나기노 나루세 (장어덮밥)', time: '11:30 점심', lat: 35.6657, lng: 139.7610, desc: '⭐고PD 픽! 장어덮밥 ¥1,600부터. 카렛타 시오도메 B1F. 11:00~15:00 / 17:00~20:00.', gmap: 'Unagi+no+Naruse+Caretta+Shiodome' },
+  { day: 'x', name: '🥩 이마카츠 롯폰기점 (흑돼지 돈카츠)', time: 'Day2 저녁 대안', area: '롯폰기', rec: 'Day 2 저녁 추천', lat: 35.6627, lng: 139.7322, desc: '⭐추성훈 맛집! 흑돼지 돈카츠. 시부야→히비야선→롯폰기 10분.', gmap: 'Imakatsu+Roppongi' },
+  { day: 'x', name: "🍔 Maa-san's House (함박스테이크)", time: '시부야 저녁 대안', area: '시부야', rec: 'Day 2 저녁 추천', lat: 35.6585, lng: 139.6968, desc: '와규 토로토로 함박스테이크 전문. 시부야 도겐자카.', gmap: 'Maa+san+House+Shibuya+Dogenzaka' },
+  { day: 'x', name: '🍢 쿠시핫친 하마마쓰초 2 (야키토리)', time: '이자카야', area: '하마마쓰초', rec: 'Day 2~3 저녁 추천', lat: 35.6582, lng: 139.7556, desc: '야키토리·이자카야. 하마마쓰초 1초메.', gmap: 'Kushihacchin+Hamamatsucho' },
+  { day: 'x', name: '🛒 몽벨 도쿄 교바시점', time: '쇼핑', area: '교바시 (도쿄역 근처)', rec: 'Day 3 추천', lat: 35.6779, lng: 139.7705, desc: '아웃도어 매장. 도쿄스퀘어가든 12F. 도쿄역 근처.', gmap: 'Montbell+Tokyo+Kyobashi' },
+  { day: 'x', name: '🍜 긴자 카가리 혼텐 (치킨 파이탄 트러플 라멘)', time: '긴자 점심', area: '긴자', rec: 'Day 3 점심 추천', lat: 35.6717, lng: 139.7651, desc: '치킨 파이탄 트러플 라멘 ¥3,000. 당점 인기 No.1.', gmap: 'Ginza+Kagari+Honten' },
+  { day: 'x', name: '🐙 긴자 후쿠요시 (타코야키)', time: '긴자 간식', area: '긴자', rec: 'Day 3 간식 추천', lat: 35.6700, lng: 139.7645, desc: '본장 오사카식 타코야키 전문. 8개 750엔~.', gmap: 'Ginza+Fukuyoshi+Takoyaki' },
+  { day: 'x', name: '🍜 양주상인 신바시점 (산라탕면)', time: '신바시 점심', area: '신바시', rec: 'Day 3 점심 추천', lat: 35.6659, lng: 139.7574, desc: '중국라면 전문 체인. 산라탕면 대표메뉴. 수도권 30여 개 점포.', gmap: 'Yangzhu+Shangren+Shimbashi' },
+  { day: 'x', name: '🍳 텟펜 신바시점 (야키소바)', time: '신바시 점심', area: '신바시', rec: 'Day 3 점심 추천', lat: 35.6664, lng: 139.7567, desc: '신바시역 근처 야키소바 전문점.', gmap: 'Teppan+Shimbashi+Yakisoba' },
+  { day: 'x', name: '🍜 쓰케멘야 야스베에 아카사카점 (츠케멘)', time: '아카사카 저녁', area: '아카사카', rec: 'Day 1 저녁 추천', lat: 35.6745, lng: 139.7378, desc: '아카사카 소재 유명 츠케멘 전문점. 후운지 대신 선택 가능.', gmap: 'Yasubee+Akasaka+Tsukemen' },
+  { day: 'x', name: '🌌 롯폰기 힐즈 스카이덱', time: '여유시', area: '롯폰기', rec: 'Day 2 저녁 추천', lat: 35.6604, lng: 139.7292, desc: '〈날씨의 아이〉 옥상 신사 모티브. 야외 헬리포트 전망대.', gmap: 'Roppongi+Hills+Sky+Deck' },
+  { day: 'x', name: '🗽 오다이바 자유의 여신상', time: '여유시', area: '오다이바', rec: '반나절 여유시 추천', lat: 35.6263, lng: 139.7748, desc: '〈날씨의 아이〉 야경 명소. 무지개 다리 뷰.', gmap: 'Odaiba+Statue+of+Liberty' },
+  { day: 'x', name: '🚉 도쿄역 마루노우치 광장', time: '여유시', area: '마루노우치', rec: 'Day 3 이동 중 추천', lat: 35.6814, lng: 139.7660, desc: '〈스즈메의 문단속〉 등장. 도쿄역 캐릭터 스트리트(B1)도 있음!', gmap: 'Tokyo+Station+Marunouchi' },
+  { day: 'x', name: '🌉 오차노미즈 히지리바시', time: '여유시', area: '오차노미즈', rec: '여유시 추천', lat: 35.6993, lng: 139.7672, desc: '〈스즈메의 문단속〉 차 타는 장면.', gmap: 'Hijiribashi+Ochanomizu' },
+  { day: 'x', name: '🛍 나카노 브로드웨이', time: '굿즈', area: '나카노', rec: '굿즈 쇼핑 추천', lat: 35.7088, lng: 139.6660, desc: '만다라케 본점. 희귀 빈티지 애니 굿즈 천국.', gmap: 'Nakano+Broadway' },
+  { day: 'x', name: '🎭 이케부쿠로 애니메이트 본점', time: '굿즈', area: '이케부쿠로', rec: '굿즈 쇼핑 추천', lat: 35.7290, lng: 139.7137, desc: '8층 통째 애니샵. 신간 굿즈는 여기.', gmap: 'Animate+Ikebukuro' },
+  { day: 'x', name: '🎨 시모키타자와', time: '편집샵', area: '시모키타자와', rec: 'Day 1~2 오후 추천', lat: 35.6614, lng: 139.6680, desc: '도쿄의 홍대. 빈티지·인디 편집샵 천국.', gmap: 'Shimokitazawa' },
+  { day: 'x', name: '📚 다이칸야마 츠타야 T-Site', time: '편집샵', area: '다이칸야마', rec: 'Day 2 오후 추천', lat: 35.6486, lng: 139.7012, desc: '책+카페+패션 한 곳에.', gmap: 'Daikanyama+Tsutaya' },
+  { day: 'x', name: '🍜 로쿠린샤 도쿄역점 (츠케멘)', time: '식사', area: '도쿄역', rec: 'Day 3 추천', lat: 35.6814, lng: 139.7676, desc: '츠케멘 명가. 도쿄역 라멘 스트리트(B1).', gmap: 'Rokurinsha+Tokyo+Station' },
 ];
 
-// ===== MAP =====
 const map = L.map('map').setView([35.6850, 139.7400], 11);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© OpenStreetMap',
-  maxZoom: 19,
-}).addTo(map);
-
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap', maxZoom: 19 }).addTo(map);
 const dayColors = { '1': '#2563eb', '2': '#dc2626', '3': '#16a34a', 'x': '#6b7280' };
 const dayLabels = { '1': 'Day 1 — 도착 + 신카이 성지', '2': 'Day 2 — 메인 풀코스', '3': 'Day 3 — 출국', 'x': '🎁 시간 남으면' };
-
+const dayAreas = { '1': '신주쿠 · 요쓰야 · 아카사카', '2': '하라주쿠 · 요요기 · 시부야', '3': '아사쿠사 · 스카이트리 · 긴자 · 신바시 · 시오도메', 'x': '' };
 const markers = {};
 
 function makeIcon(day) {
-  return L.divIcon({
-    className: 'custom-marker',
-    html: `<div style="background:${dayColors[day]};width:28px;height:28px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:12px;">${day === 'x' ? '+' : day}</div>`,
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
-  });
+  return L.divIcon({ className: 'custom-marker', html: `<div style="background:${dayColors[day]};width:28px;height:28px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:12px;">${day === 'x' ? '+' : day}</div>`, iconSize: [28, 28], iconAnchor: [14, 14] });
 }
 
 places.forEach((p, i) => {
   const gmapUrl = `https://www.google.com/maps/search/?api=1&query=${p.gmap}`;
-  const marker = L.marker([p.lat, p.lng], { icon: makeIcon(p.day) })
-    .addTo(map)
-    .bindPopup(`
-      <div class="popup-title">${p.name}</div>
-      <div class="popup-time">${p.time}</div>
-      <div class="popup-desc">${p.desc}</div>
-      <a class="popup-link" href="${gmapUrl}" target="_blank">📍 구글맵에서 열기</a>
-    `);
+  const marker = L.marker([p.lat, p.lng], { icon: makeIcon(p.day) }).addTo(map).bindPopup(`<div class="popup-title">${p.name}</div><div class="popup-time">${p.time}</div><div class="popup-desc">${p.desc}</div><a class="popup-link" href="${gmapUrl}" target="_blank">📍 구글맵에서 열기</a>`);
   markers[i] = { marker, day: p.day };
 });
 
-// ===== SIDEBAR =====
 function renderList() {
   const container = document.getElementById('place-list');
   container.innerHTML = '';
   ['1', '2', '3', 'x'].forEach(d => {
     const filtered = places.map((p, i) => ({ ...p, idx: i })).filter(p => p.day === d);
-    if (filtered.length === 0) return;
+    if (!filtered.length) return;
     const section = document.createElement('div');
     section.className = `day-section d${d}`;
-    section.innerHTML = `<h2>${dayLabels[d]}</h2>`;
+    const areaHtml = dayAreas[d] ? `<div class='day-area'>${dayAreas[d]}</div>` : '';
+    section.innerHTML = `<h2>${dayLabels[d]}</h2>${areaHtml}`;
     filtered.forEach(p => {
       const gmapUrl = `https://www.google.com/maps/search/?api=1&query=${p.gmap}`;
       const item = document.createElement('div');
       item.className = 'place-item';
-      item.innerHTML = `
-        <div class="place-name">${p.name}</div>
-        <div class="place-time">${p.time}</div>
-        <div class="place-desc">${p.desc}</div>
-        <a class="gmap-link" href="${gmapUrl}" target="_blank" onclick="event.stopPropagation()">📍 구글맵에서 열기 →</a>
-      `;
-      item.addEventListener('click', () => {
-        map.flyTo([p.lat, p.lng], 16, { duration: 0.8 });
-        markers[p.idx].marker.openPopup();
-      });
+      const metaHtml = (p.area || p.rec) ? `<div class="place-meta">${p.area ? `<span class="place-area">📍 ${p.area}</span>` : ''}${p.rec ? `<span class="place-rec">${p.rec}</span>` : ''}</div>` : '';
+      item.innerHTML = `<div class="place-name">${p.name}</div><div class="place-time">${p.time}</div>${metaHtml}<div class="place-desc">${p.desc}</div><a class="gmap-link" href="${gmapUrl}" target="_blank" onclick="event.stopPropagation()">📍 구글맵에서 열기 →</a>`;
+      item.addEventListener('click', () => { map.flyTo([p.lat, p.lng], 16, { duration: 0.8 }); markers[p.idx].marker.openPopup(); });
       section.appendChild(item);
     });
     container.appendChild(section);
@@ -195,19 +143,13 @@ function renderList() {
 }
 renderList();
 
-// ===== DAY FILTER =====
 const activeDays = { '1': true, '2': true, '3': true, 'x': true };
 document.querySelectorAll('.day-filter button').forEach(btn => {
   btn.addEventListener('click', () => {
     const d = btn.dataset.day;
     activeDays[d] = !activeDays[d];
     btn.classList.toggle('active');
-    Object.values(markers).forEach(({ marker, day }) => {
-      if (day === d) {
-        if (activeDays[d]) marker.addTo(map);
-        else map.removeLayer(marker);
-      }
-    });
+    Object.values(markers).forEach(({ marker, day }) => { if (day === d) { if (activeDays[d]) marker.addTo(map); else map.removeLayer(marker); } });
   });
 });
 </script>
