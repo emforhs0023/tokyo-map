@@ -1,0 +1,11 @@
+name: 검사
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  html-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx --yes html-validate@8 index.html
